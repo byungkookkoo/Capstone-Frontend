@@ -3,6 +3,15 @@
     package="com.example.capstone_frontend">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- socket 관련 권한 -->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- 카메라 접근 권한 -->
+    <uses-permission android:name="android.permission.CALL_PHONE" /> <!-- 전화 걸기 권한 -->
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
 
     <application
         android:name=".GlobalApplication"
@@ -12,8 +21,12 @@
         android:roundIcon="@mipmap/ic_hyojason_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CapstoneFrontend">
-        <activity android:name=".ChildMainActivity"></activity>
-        <activity android:name=".ParentMainActivity" />
+        <activity android:name=".ChatActivity" />
+        <activity android:name=".FriendRequestActivity" />
+        <activity android:name=".FriendListActivity" />
+        <activity android:name=".AddFriendActivity" />
+        <activity android:name=".SnaptalkActivity" />
+        <activity android:name=".MainHomeActivity" />
         <activity android:name=".MyProfileActivity" />
         <activity android:name=".LogInActivity" />
         <activity android:name=".ChooseTypeActivity" />
@@ -36,6 +49,33 @@
                     android:scheme="kakao5bec60bab0b4893040677633105f1a77" />
             </intent-filter>
         </activity>
+
+        <!-- Add FCM Service -->
+        <service android:name=".MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- 카메라 기능 관련 Provider -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.capstone_frontend.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

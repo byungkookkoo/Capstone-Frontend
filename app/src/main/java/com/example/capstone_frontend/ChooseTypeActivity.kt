@@ -1,13 +1,16 @@
 package com.example.capstone_frontend
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.database.*
 import com.kakao.sdk.user.UserApiClient
 import kotlinx.android.synthetic.main.activity_type.*
 
@@ -17,93 +20,164 @@ class ChooseTypeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_type)
 
-        var id = -1L
-        var email = "null"
-        var ageRange = "null"
-
-        UserApiClient.instance.me { user, error ->
-            if (error != null) {
-                Log.e("TAG", "사용자 정보 요청 실패", error)
-            } else if (user != null) {
-                id = user.id    // 회원번호
-                email = user.kakaoAccount?.email.toString()   // 카카오 계정
-                ageRange = user.kakaoAccount?.ageRange.toString()  // 연령대
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = "Dangerous situation"
+            val name = "위험 상황 탐지"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val mChannel = NotificationChannel(channelId, name, importance)
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
         }
 
-        /*
-        DB에 사용자 정보(Stype, inputNick)가 입력되어있는 경우 바로 MainActivity로 넘어간다.
-        토큰 정보 가져온 뒤 해당 값(회원번호 또는 카카오 이메일) 이용해서 Stype, nickname 가져오기
-        UserApiClient.instance.me { user, error ->
-            if (error != null) {
-                Log.e("TAG", "사용자 정보 요청 실패", error)
-            } else if (user != null) {
-                id = user.idS
-            }
-        }
-
-        if
-            val intent = Intent(this, ParentMainActivity::class.java)
-                intent.putExtra("type", Stype)
-                intent.putExtra("nickname", inputNick)
-                startActivity(intent)
-        } else if (Stype == "C") {
-            val intent = Intent(this, ChildMainActivity::class.java)
-                intent.putExtra("type", Stype)
-                intent.putExtra("nickname", inputNick)
-                startActivity(intent)
-        } else { 아래 전체 내용
-         */
-
-//        val editText = findViewById<EditText>(R.id.edit_nickN)
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val userReference: DatabaseReference = database.getReference("users")
         var type: String
         var nickName: String
+        var userSearchList = ArrayList<User>()
+        var nickSearch: User? = null
+        var position = 0
+        var isUserCheck = false
 
-        btnGrandma.setOnClickListener {
-            type = "P"
-            // Toast.makeText(applicationContext, Stype, Toast.LENGTH_SHORT).show()
-            btnNickName.setOnClickListener {
-                nickName = editNickName.text.toString()
-                // Toast.makeText(this@ChooseTypeActivity, inputNick, Toast.LENGTH_SHORT).show()
+        UserApiClient.instance.me { user, error ->
+            if (error != null) {
+                Log.e("TAG", "사용자 정보 요청 실패", error)
+            } else if (user != null) {
+                val id = user.id.toString()
+                val email = user.kakaoAccount?.email.toString()
+                val ageRange = user.kakaoAccount?.ageRange.toString()
 
-                writeNewUser(id, nickName, email, type, ageRange) // DB에 회원정보 저장
+                btn_nickname.setOnClickListener {
+                    when (type_group.checkedRadioButtonId) {
+                        R.id.btn_grandpa -> tv.text = "부모로 설정\n"
+                        R.id.btn_daughter -> tv.text = "자녀로 설정\n"
+                    }
+                }
 
-                val intent = Intent(this, ParentMainActivity::class.java)
-                intent.putExtra("type", type)
-                intent.putExtra("nickName", nickName)
-                startActivity(intent)
-            }
-        }
+                type_group.setOnCheckedChangeListener(CheckboxListener())
+                type_group.setOnCheckedChangeListener { group, checkedId ->
+                    when (checkedId) {
+                        R.id.btn_grandpa -> tv.text = "'부모'를 선택하셨습니다."
+                        R.id.btn_daughter -> tv.text = "'자녀'를 선택하셨습니다."
+                    }
+                }
 
-        btnSon.setOnClickListener {
-            type = "C"
-            // Toast.makeText(applicationContext, Stype, Toast.LENGTH_SHORT).show()
+                btn_grandpa.setOnClickListener {
+                    type = "P"
+                    btn_nickname.setOnClickListener {
+                        nickName = edit_nickname.text.toString()
 
-            btnNickName.setOnClickListener {
-                nickName = editNickName.text.toString()
-                // Toast.makeText(this@ChooseTypeActivity, inputNick, Toast.LENGTH_SHORT).show()
+                        if (nickName.equals("")) {
+                            Toast.makeText(this, "별명을 입력하세요.", Toast.LENGTH_SHORT).show()
+                        } else if(nickName == "Waiting") {
+                            Toast.makeText(this, "사용할 수 없는 별명입니다.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            userReference.addValueEventListener(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    userSearchList.clear()
+                                    position = 0
+                                    isUserCheck = false
 
-                writeNewUser(id, nickName, email, type, ageRange) // DB에 회원정보 저장
+                                    for (i: DataSnapshot in snapshot.children) {
+                                        nickSearch = i.getValue(User::class.java)
+                                        userSearchList.add(nickSearch!!)
 
-                val intent = Intent(this, ChildMainActivity::class.java)
-                intent.putExtra("type", type)
-                intent.putExtra("nickName", nickName)
-                startActivity(intent)
+                                        if (nickName == userSearchList[position].nickname.toString() && id != userSearchList[position].userid.toString()) {
+                                            Toast.makeText(this@ChooseTypeActivity, "이미 존재하는 닉네임 입니다.", Toast.LENGTH_SHORT).show()
+                                            isUserCheck = true
+                                            break
+                                        }
+                                        position++
+                                    }
+                                    if (!isUserCheck) {
+                                        writeNewUser(id, nickName, email, type, ageRange, userReference)
+
+                                        val homeIntent = Intent(this@ChooseTypeActivity, MainHomeActivity::class.java)
+                                        homeIntent.putExtra("id", id)
+                                        homeIntent.putExtra("type", type)
+                                        homeIntent.putExtra("nickName", nickName)
+                                        startActivity(homeIntent)
+                                    }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Toast.makeText(this@ChooseTypeActivity, "읽어오기 실패.", Toast.LENGTH_SHORT).show()
+                                }
+                            })
+                        }
+                    }
+                }
+
+                btn_daughter.setOnClickListener {
+                    type = "C"
+
+                    btn_nickname.setOnClickListener {
+                        nickName = edit_nickname.text.toString()
+
+                        if (nickName.equals("")) {
+                            Toast.makeText(this, "닉네임을 입력하세요.", Toast.LENGTH_SHORT).show()
+                        } else if(nickName == "") {
+
+                        } else {
+                            userReference.addValueEventListener(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    userSearchList.clear()
+                                    position = 0
+                                    isUserCheck = false
+
+                                    for (i: DataSnapshot in snapshot.children) {
+                                        nickSearch = i.getValue(User::class.java)
+                                        userSearchList.add(nickSearch!!)
+
+                                        if (nickName == userSearchList[position].nickname.toString() && id != userSearchList[position].userid.toString()) {
+                                            Toast.makeText(this@ChooseTypeActivity, "이미 존재하는 닉네임 입니다.", Toast.LENGTH_SHORT ).show()
+                                            isUserCheck = true
+                                            break
+                                        }
+                                        position++
+                                    }
+                                    if (!isUserCheck) {
+                                        writeNewUser(id, nickName, email, type, ageRange, userReference)
+
+                                        val homeIntent = Intent(this@ChooseTypeActivity, MainHomeActivity::class.java)
+                                        homeIntent.putExtra("id", id)
+                                        homeIntent.putExtra("type", type)
+                                        homeIntent.putExtra("nickName", nickName)
+                                        startActivity(homeIntent)
+                                    }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Toast.makeText(this@ChooseTypeActivity, "읽어오기 실패.", Toast.LENGTH_SHORT).show()
+                                }
+                            })
+                        }
+                    }
+                }
             }
         }
     }
 
-    fun writeNewUser(
-        userId: Long,
+    inner class CheckboxListener : RadioGroup.OnCheckedChangeListener {
+        override fun onCheckedChanged(group: RadioGroup?, checkedId: Int) {
+            when (group?.id) {
+                R.id.type_group ->
+                    when (checkedId) {
+                        R.id.btn_grandpa -> tv.text = "부모 설정"
+                        R.id.btn_daughter -> tv.text = "자녀 설정"
+                    }
+            }
+        }
+    }
+
+    private fun writeNewUser(
+        userId: String,
         nickname: String,
         email: String,
         type: String,
-        ageRange: String
+        ageRange: String,
+        db: DatabaseReference
     ) {
-        val db: DatabaseReference
-        db = Firebase.database.reference
         val user = User(userId, nickname, email, type, ageRange)
-
-        db.child("users").child(nickname).setValue(user)
+        db.child(userId).setValue(user)
     }
 }

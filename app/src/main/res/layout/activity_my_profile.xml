@@ -4,55 +4,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/myprofile"
     tools:context=".MyProfileActivity">
 
+
     <TextView
-        android:id="@+id/kakaoEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="이메일: "
-        android:textSize="20sp"
+        android:id="@+id/tv_nickname"
+        android:layout_width="320dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="324dp"
+        android:fontFamily="@font/omnigulim_30"
+        android:gravity="center_horizontal"
+        android:textColor="#50574a"
+        android:textSize="40sp"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tvType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="유형: "
-        android:textSize="20sp"
+        android:id="@+id/tv_type"
+        android:layout_width="320dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/omnigulim_30"
+        android:gravity="center_horizontal"
+        android:textColor="#50574a"
+        android:textSize="40sp"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/kakaoEmail" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_nickname" />
 
-    <TextView
-        android:id="@+id/tvNickName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="닉네임 : "
-        android:textSize="20sp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvType" />
-
-    <Button
-        android:id="@+id/btnKakaoLogout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="로그아웃"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnKakaoUnlink"
+    <ImageButton
+        android:id="@+id/btn_kakao_logout"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="24dp"
+        android:src="@drawable/logout1"
+        app:layout_constraintBottom_toTopOf="@+id/btn_kakao_unlink"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <Button
-        android:id="@+id/btnKakaoUnlink"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:id="@+id/btn_kakao_unlink"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="@color/white"
+        android:fontFamily="@font/omnigulim_30"
         android:text="회원 탈퇴"
-        android:textSize="10sp"
+        android:textColor="#50574a"
+        android:textSize="15sp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 

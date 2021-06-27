@@ -1,0 +1,16 @@
+com.gun0912.tedpermission.BuildConfig
+com.gun0912.tedpermission.PermissionBuilder
+com.gun0912.tedpermission.PermissionListener
+com.gun0912.tedpermission.TedPermission
+com.gun0912.tedpermission.TedPermission$1
+com.gun0912.tedpermission.TedPermission$Builder
+com.gun0912.tedpermission.TedPermissionActivity
+com.gun0912.tedpermission.TedPermissionActivity$1
+com.gun0912.tedpermission.TedPermissionActivity$2
+com.gun0912.tedpermission.TedPermissionActivity$3
+com.gun0912.tedpermission.TedPermissionActivity$4
+com.gun0912.tedpermission.TedPermissionActivity$5
+com.gun0912.tedpermission.TedPermissionActivity$6
+com.gun0912.tedpermission.TedPermissionBase
+com.gun0912.tedpermission.TedPermissionResult
+com.gun0912.tedpermission.util.ObjectUtils

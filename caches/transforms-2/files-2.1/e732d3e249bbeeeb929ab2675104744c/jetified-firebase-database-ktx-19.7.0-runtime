@@ -1,0 +1,5 @@
+com.google.firebase.database.ktx.BuildConfig
+com.google.firebase.database.ktx.DatabaseKt
+com.google.firebase.database.ktx.DatabaseKt$getValue$1
+com.google.firebase.database.ktx.DatabaseKt$getValue$2
+com.google.firebase.database.ktx.FirebaseDatabaseKtxRegistrar

@@ -3,7 +3,11 @@ package com.example.capstone_frontend
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import com.kakao.sdk.auth.LoginClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.AuthErrorCause.*
@@ -15,16 +19,7 @@ class LogInActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_log_in)
 
-        UserApiClient.instance.accessTokenInfo { tokenInfo, error ->
-            if (error != null) {
-                // Toast.makeText(this, "토큰 정보 보기 실패", Toast.LENGTH_SHORT).show()
-            } else if (tokenInfo != null) {
-                // Toast.makeText(this, "토큰 정보 보기 성공", Toast.LENGTH_SHORT).show()
-                val intent =
-                    Intent(this, ChooseTypeActivity::class.java) //->LogoutActivity::class.java
-                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
-            }
-        }
+        val db: DatabaseReference = Firebase.database.getReference("users")
 
         val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
             if (error != null) {
@@ -60,13 +55,41 @@ class LogInActivity : AppCompatActivity() {
                     }
                 }
             } else if (token != null) {
-                Toast.makeText(this, "로그인에 성공하였습니다.", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, ChooseTypeActivity::class.java)
-                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                UserApiClient.instance.me { user, error ->
+                    if (error != null) {
+                        Log.e("Token", "사용자 정보 요청 실패", error)
+                    } else if (user != null) {
+                        val id = user.id.toString()
+                        Log.d("Token", "사용자 정보 요청 성공")
+
+                        db.child(id).child("type").get().addOnSuccessListener {
+                            val type = it.value.toString()
+
+                            db.child(id).child("nickname").get().addOnSuccessListener {
+                                val nickName = it.value.toString()
+
+                                if (type == "P" || type == "C" && nickName != null) {
+                                    val homeIntent = Intent(this, MainHomeActivity::class.java)
+                                    homeIntent.putExtra("id", id)
+                                    homeIntent.putExtra("type", type)
+                                    homeIntent.putExtra("nickName", nickName)
+                                    startActivity(homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                                } else {
+                                    val intent = Intent(this, ChooseTypeActivity::class.java)
+                                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                                }
+                            }.addOnFailureListener {
+                                Log.e("firebase", "Error getting data", it)
+                            }
+                        }.addOnFailureListener {
+                            Log.e("firebase", "Error getting data", it)
+                        }
+                    }
+                }
             }
         }
 
-        btnKakaoLogin.setOnClickListener {
+        btn_kakao_login.setOnClickListener {
             if (LoginClient.instance.isKakaoTalkLoginAvailable(this)) {
                 LoginClient.instance.loginWithKakaoTalk(this, callback = callback)
             } else {
